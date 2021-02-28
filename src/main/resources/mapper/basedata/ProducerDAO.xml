@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tbl.modules.basedata.dao.ProducerDAO">
+    <select id="getAllListP" resultType="com.tbl.modules.basedata.entity.Producer">
+        select id,producer_code,producer_name,producer_type,linkman,
+        telephone,address,mail,remark
+        from base_producer where 1=1
+        <if test="list!=null and list.size()>0">
+            and id in
+            <foreach item="ids" index="index" collection="list"
+                     open="(" separator="," close=")">
+                #{ids}
+            </foreach>
+        </if>
+    </select>
+
+</mapper>

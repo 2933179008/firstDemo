@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tbl.modules.stock.dao.MaterielBindRfidDetailDAO">
+
+    <update id="updateAmount">
+        update materiel_bind_rfid_detail set amount=#{amount} where id=#{materielBindRfidDetailBy}
+    </update>
+
+    <update id="updateNumWeiById">
+        update materiel_bind_rfid_detail set number =null,ml_weight =null where id=#{id}
+    </update>
+
+    <update id="updateDeleteFlag">
+        update materiel_bind_rfid_detail set delete_flag =0,delete_by=#{deleteBy} where id=#{id}
+    </update>
+
+    <update id="updateWeight">
+        update materiel_bind_rfid_detail set weight=#{weight} where id=#{materielBindRfidDetailBy}
+    </update>
+
+    <update id="updateSurplus">
+        update materiel_bind_rfid_detail set amount=#{amount},weight=#{weight} where id=#{materielBindRfidDetailBy}
+    </update>
+    <!--根据rfid查询绑定的物料-->
+    <select id="getMaterialBundingDetail" resultType="java.util.Map">
+        select a.*
+        from materiel_bind_rfid_detail a
+        inner join materiel_bind_rfid b on a.materiel_bind_rfid_by=b.id
+        where b.rfid=#{rfid}
+        and b.deleted_flag='1'
+        and a.delete_flag='1'
+    </select>
+
+    <!--获取物料绑定详情列表数据  未入库-->
+    <select id="selectByListN" resultType="com.tbl.modules.stock.entity.MaterielBindRfidDetail">
+        SELECT id,materiel_code AS materielCode,materiel_name AS materielName,batch_rule AS batchRule,weight,position_id AS positionName,amount,unit,rfid
+        from materiel_bind_rfid_detail
+        where delete_flag = 1 and materiel_bind_rfid_by = #{materielBindRfidBy}
+
+    </select>
+
+    <!--获取物料绑定详情列表数据 已入库-->
+    <select id="selectByList" resultType="com.tbl.modules.stock.entity.MaterielBindRfidDetail">
+        SELECT a.id,a.materiel_code AS materielCode,a.materiel_name AS materielName,a.batch_rule AS batchRule,a.weight,b.position_name AS positionName,a.amount,a.unit,a.rfid
+        from materiel_bind_rfid_detail a
+        INNER JOIN base_depot_position b ON b.id=a.position_id
+        where a.delete_flag = 1
+        and a.materiel_bind_rfid_by = #{materielBindRfidBy}
+    </select>
+    <!--库位编、物料编码、RFID可确定唯一库存-->
+    <select id="getStockInfo" resultType="com.tbl.modules.stock.entity.Stock">
+        select * from stock
+        where material_type=#{materialType}
+        and position_code=#{positionCode}
+        and material_code=#{materialCode}
+        and rfid like concat(concat('%', #{rfid}), '%')
+    </select>
+    <!--库位 查询 绑定详情 -->
+    <select id="selectListBySort" resultType="com.tbl.modules.stock.entity.MaterielBindRfidDetail">
+        SELECT materiel_code,materiel_name,batch_rule,amount,weight,unit,mbrd.rfid,sort
+        FROM materiel_bind_rfid_detail AS mbrd
+        JOIN materiel_bind_rfid AS mbr ON mbr.id = mbrd.materiel_bind_rfid_by
+        WHERE delete_flag = 1
+        AND mbr.position_by = #{positionId}
+		ORDER BY isnull(sort),sort ASC
+    </select>
+
+</mapper>

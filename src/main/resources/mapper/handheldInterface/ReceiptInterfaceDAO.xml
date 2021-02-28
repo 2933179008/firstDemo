@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tbl.modules.handheldInterface.dao.ReceiptInterfaceDAO">
+
+    <!--根据收货单id更新收货计划单的状态为收货中-->
+    <update id="updateStateToReceipt">
+        update receipt_plan set state = '2' where id=#{receiptPlanId}
+    </update>
+
+    <!--根据收货单id更新收货计划单的状态为已完成-->
+    <update id="updateStateToComplete">
+        update receipt_plan set state = '3' where id=#{receiptPlanId}
+    </update>
+
+</mapper>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tbl.modules.instorage.dao.QualityBillDAO">
+    <!--更新库存表中的可用库存数量、可用库存重量、可用托盘库存数量-->
+    <update id="updateStock">
+        <foreach collection="lstPutBillDetail" item="putBillDetail" index="index" open="" separator=";" close="">
+            update stock
+            set available_stock_amount=if(available_stock_amount is null,#{putBillDetail.put_amount},available_stock_amount+#{putBillDetail.put_amount}),
+                available_stock_weight=if(available_stock_weight is null,#{putBillDetail.put_weight},available_stock_weight+#{putBillDetail.put_weight}),
+                available_stock_rfid_amount=if(available_stock_rfid_amount is null,1,available_stock_rfid_amount+1),
+                available_rfid=if(available_rfid is null,#{putBillDetail.rfid},CONCAT(available_rfid,',',#{putBillDetail.rfid}))
+            where material_code=#{putBillDetail.material_code}
+            and batch_no=#{putBillDetail.batch_no}
+            and position_code=#{putBillDetail.position_code}
+        </foreach>
+    </update>
+    <!--获取质检单列表-->
+    <select id="getPageQualityBillList" resultType="com.tbl.modules.instorage.entity.QualityBill">
+        select a.*
+        from quality_bill a
+        where 1=1
+        <if test="qualityCode != null and qualityCode!=''">
+            and a.quality_code like concat(concat('%', #{qualityCode}), '%')
+        </if>
+        <if test="instorageBillCode != null and instorageBillCode!=''">
+            and a.instorage_bill_code like concat(concat('%', #{instorageBillCode}), '%')
+        </if>
+    </select>
+    <!--获取最大质检单编号-->
+    <select id="getMaxQualityCode" resultType="java.lang.String">
+        select max(quality_code) from quality_bill
+    </select>
+
+    <!--获取入库单下拉框列表-->
+    <select id="getSelectInstorageList" resultType="java.util.Map">
+        <!--select a.id,a.instorage_bill_code as text-->
+        <!--from instorage_bill a-->
+        <!--left join quality_bill b-->
+        <!--on a.id=b.instorage_bill_id-->
+        <!--where 1=1-->
+        <!--and b.id is null-->
+        <!--and a.state !='0'-->
+        <!--<if test='queryString!=null and queryString!=""'>-->
+            <!--and a.instorage_bill_code like concat(concat('%', #{queryString}), '%')-->
+        <!--</if>-->
+
+        select a.id,a.instorage_bill_code as text
+        from instorage_bill a
+        where 1=1
+        and a.cross_docking != '1'
+        <if test='queryString!=null and queryString!=""'>
+            and a.instorage_bill_code like concat(concat('%', #{queryString}), '%')
+        </if>
+    </select>
+    <!--获取入库单下拉框列表数据总条数-->
+    <select id="getSelectInstorageTotal" resultType="java.lang.Integer">
+        <!--select count(1)-->
+        <!--from instorage_bill a-->
+        <!--left join quality_bill b-->
+        <!--on a.id=b.instorage_bill_id-->
+        <!--where 1=1-->
+        <!--and b.id is null-->
+        <!--and a.state !='0'-->
+        <!--<if test='queryString!=null and queryString!=""'>-->
+            <!--and a.instorage_bill_code like concat(concat('%', #{queryString}), '%')-->
+        <!--</if>-->
+
+        select count(1)
+        from instorage_bill a
+        where 1=1
+        and a.cross_docking != '1'
+        <if test='queryString!=null and queryString!=""'>
+            and a.instorage_bill_code like concat(concat('%', #{queryString}), '%')
+        </if>
+    </select>
+
+    <!--获取物料下拉列表-->
+    <select id="getSelectMaterialList" resultType="java.util.Map">
+        select material_code as id,material_name as text
+        from instorage_bill_detail
+        where 1=1
+        and instorage_bill_id=#{instorageBillId}
+        <if test='queryString!=null and queryString!=""'>
+            and material_name like concat(concat('%', #{queryString}), '%')
+        </if>
+    </select>
+    <!--获取物料下拉列表总条数-->
+    <select id="getSelectMaterialTotal" resultType="java.lang.Integer">
+        select count(1)
+        from instorage_bill_detail
+        where 1=1
+        and instorage_bill_id=#{instorageBillId}
+        <if test='queryString!=null and queryString!=""'>
+            and material_name like concat(concat('%', #{queryString}), '%')
+        </if>
+    </select>
+    <!--根据入库单查询入库单中已上架的物料的信息-->
+    <select id="selectPutDetailByInstorageBillId" resultType="java.util.Map">
+        select a.* from put_bill_detail a
+        inner join put_bill b on a.put_bill_id=b.id
+        where 1=1
+        and b.instorage_bill_id=#{instorageBillId}
+        and a.state=1
+    </select>
+    <!--根据质检单id查询对应的入库单的入库流程-->
+    <select id="getInstorageProcess" resultType="java.util.Map">
+        select b.instorage_process,b.state from quality_bill a
+        inner join instorage_bill b
+        on a.instorage_bill_id=b.id
+        where a.id=#{qualityId}
+    </select>
+    <!--根据质检单id查询质检单对应上架单详情-->
+    <select id="getPutBillDetail" resultType="java.util.Map">
+        select d.rfid,d.state from quality_bill a
+        inner join instorage_bill b on a.instorage_bill_id=b.id
+        inner join put_bill c on b.id=c.instorage_bill_id
+        inner join put_bill_detail d on c.id=d.put_bill_id
+        where a.id=#{qualityId}
+    </select>
+
+    <!--获取质检超时集合-->
+    <select id="getTimeOutList" resultType="java.util.Map">
+        select * from quality_bill where state = '0'
+    </select>
+
+    <!--根据id获取入库单导出列-->
+    <select id="getAllLists" resultType="com.tbl.modules.instorage.entity.QualityBill">
+        select a.*
+        from quality_bill a
+        where 1=1
+        <if test="list!=null and list.size()>0">
+            and a.id in
+            <foreach item="ids" index="index" collection="list"
+                     open="(" separator="," close=")">
+                #{ids}
+            </foreach>
+        </if>
+    </select>
+</mapper>

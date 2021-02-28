@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tbl.modules.outstorage.dao.SpareBillDAO">
+    <select id = "selectSpareBillList" resultType="com.tbl.modules.outstorage.entity.SpareBillManagerVO">
+        select sb.id,spare_bill_code spareBillCode,sb.remark,product_no productNo,product_name productName,mix_use_line mixUseLine,state,total_product_amount totalProductAmount,
+        su.username productUser, sa.username materialsUser,sc.username qualityUser,product_time productTime,materials_time materialsTime,quality_time qualityTime,
+        product_state productState,materials_state materialsState,quality_state qualityState
+        from spare_bill sb
+          left join sys_user su on sb.product_user = su.user_id
+          left join sys_user sa on sb.materials_user = sa.user_id
+          left join sys_user sc on sb.quality_user = sc.user_id
+        where 1=1
+              <if test = "spare_bill_code!=null and spare_bill_code.trim()!=''">
+                  and spare_bill_code like concat(concat('%', #{spare_bill_code}), '%')
+              </if>
+
+            <if test = "product_no!=null and product_no.trim()!=''">
+                and product_no like concat(concat('%', #{product_no}), '%')
+            </if>
+    </select>
+
+    <select id = "isExist" resultType="java.lang.Integer">
+        select count(1) from outstorage_bill where spare_bill_code in(#{ids})
+    </select>
+
+    <select id = "getMaxOutstorageCode" resultType="java.lang.String">
+        select max(spare_bill_code) from spare_bill
+    </select>
+
+
+    <select id = "getAllList" resultType="com.tbl.modules.outstorage.entity.SpareBillManagerVO">
+        select sb.id,spare_bill_code spareBillCode,sb.remark,product_no productNo,product_name productName,mix_use_line mixUseLine,state,total_product_amount totalProductAmount,
+        su.username productUser, sa.username materialsUser,sc.username qualityUser,product_time productTime,materials_time materialsTime,quality_time qualityTime,
+        product_state productState,materials_state materialsState,quality_state qualityState
+        from spare_bill sb
+        left join sys_user su on sb.product_user = su.user_id
+        left join sys_user sa on sb.materials_user = sa.user_id
+        left join sys_user sc on sb.quality_user = sc.user_id
+        where 1=1
+        <if test="list!=null and list.size()>0">
+            and sb.id in
+            <foreach item="ids" index="index" collection="list"
+                     open="(" separator="," close=")">
+                #{ids}
+            </foreach>
+        </if>
+    </select>
+
+</mapper>

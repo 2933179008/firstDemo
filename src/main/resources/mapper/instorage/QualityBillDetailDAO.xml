@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tbl.modules.instorage.dao.QualityBillDetailDAO">
+    <!--更新质检单的样本重量-->
+    <update id="updateSampleWeight">
+        update quality_bill_detail set sample_weight=#{sampleWeight}
+        where id = #{qualityBillDetailId}
+    </update>
+    <!--更新质检单的合格重量-->
+    <update id="updateQualifiedWeight">
+        update quality_bill_detail set qualified_weight=#{qualifiedWeight}
+        where id = #{qualityBillDetailId}
+    </update>
+
+    <!--获取质检单详情列表-->
+    <select id="getPageQualityBillDetailList" resultType="com.tbl.modules.instorage.entity.QualityBillDetail">
+        select * from quality_bill_detail where quality_id=#{qualityId}
+    </select>
+    <!--根据质检单主键和物料编码获取物料数量-->
+    <select id="getMaterialCount" resultType="java.lang.Integer">
+        select count(1) from quality_bill_detail
+        where quality_id = #{qualityId} and material_code in
+        <foreach collection="materialCodes" item="materialCode" index="index" open="(" separator="," close=")">
+            #{materialCode}
+        </foreach>
+    </select>
+</mapper>

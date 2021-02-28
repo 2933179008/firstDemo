@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tbl.modules.platform.dao.system.MenuDAO">
+    <!--获取角色所有顶层菜单-->
+    <select id="listAllParentMenu" resultType="com.tbl.modules.platform.entity.system.Menu">
+        select * from SYS_MENU where PARENT_ID = 0 and MENU_ID in
+		(select MENU_ID from SYS_ROLEMENU where ROLE_ID = #{role_id} ) order by MENU_ORDER
+    </select>
+
+    <!--根据父菜单ID获取所有子菜单-->
+    <select id="listSubMenuByParentId" resultType="com.tbl.modules.platform.entity.system.Menu">
+        select * from SYS_MENU where PARENT_ID = #{parentId} and MENU_ID in
+		(select MENU_ID from SYS_ROLEMENU where ROLE_ID = #{role_id} ) order by MENU_ORDER
+    </select>
+
+    <!--获取角色所有快捷菜单-->
+    <select id="listquickMenu" resultType="com.tbl.modules.platform.entity.system.Menu">
+        select * from sys_menu where menu_id in (select menu_id from sys_usermenu where isQuick=1 and user_id = #{userId}) order by menu_order
+    </select>
+
+    <select id="selectMenuid" resultType="java.util.Map">
+        select menu_id from sys_menu where menu_name like '月台%' and PARENT_ID!=0
+    </select>
+
+    <!--获取菜单列表数据-->
+    <select id="selectMenuList" resultType="com.tbl.modules.platform.entity.system.Menu">
+        select * from sys_menu where 1 = 1
+        <if test="menuId != null and menuId != 0">
+            and (PARENT_ID = #{menuId} OR MENU_ID = #{menuId})
+        </if>
+        <if test="menuName != null and menuName.trim() != ''">
+            AND MENU_NAME like concat(concat('%', #{menuName}), '%')
+        </if>
+    </select>
+
+
+</mapper>

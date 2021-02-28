@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tbl.modules.alarm.dao.AlarmDeployDAO">
+
+    <select id="getSelectUserList" resultType="java.util.Map">
+        select user_id as id,name as text from sys_user where 1=1
+        <if test='queryString!=null and queryString!=""'>
+            and name like concat(concat('%', #{queryString}), '%')
+        </if>
+    </select>
+    <select id="getSelectUserTotal" resultType="java.lang.Integer">
+        select count(1) from sys_user where 1=1
+        <if test='queryString!=null and queryString!=""'>
+            and name like concat(concat('%', #{queryString}), '%')
+        </if>
+    </select>
+
+    <select id="getOneBytype" resultType="com.tbl.modules.alarm.entity.AlarmDeploy">
+        select * from alarm_deploy where alarm_type= #{type}
+    </select>
+</mapper>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tbl.modules.instorage.dao.PutBillDAO">
+    <!--更新上架单的提交状态-->
+    <update id="updateState">
+        update put_bill set state = '1' where id=#{putBillId}
+    </update>
+    <!--获取入库单列表-->
+    <select id="getPagePutBillList" resultType="com.tbl.modules.instorage.entity.PutBill">
+        select a.*
+        from put_bill a
+        where 1=1
+        <if test="putBillCode != null and putBillCode!=''">
+            and a.put_bill_code like concat(concat('%', #{putBillCode}), '%')
+        </if>
+        <if test="instorageBillCode != null and instorageBillCode!=''">
+            and a.instorage_bill_code like concat(concat('%', #{instorageBillCode}), '%')
+        </if>
+        <if test="createTime != null and createTime!=''">
+            and a.create_time like concat(concat('%', #{createTime}), '%')
+        </if>
+    </select>
+    <!--获取最大上架单编号-->
+    <select id="getMaxPutBillCode" resultType="java.lang.String">
+        select max(put_bill_code) from put_bill
+    </select>
+    <!--获取入库单下拉框列表-->
+    <select id="getSelectInstorageList" resultType="java.util.Map">
+        select id,instorage_bill_code as text from instorage_bill
+        where 1=1
+        and state in('1','2')
+        and cross_docking != '1'
+        <if test='queryString!=null and queryString!=""'>
+            and instorage_bill_code like concat(concat('%', #{queryString}), '%')
+        </if>
+    </select>
+    <!--获取入库单下拉框列表数据总条数-->
+    <select id="getSelectInstorageTotal" resultType="java.lang.Integer">
+        select count(1) from instorage_bill
+        where 1=1
+        and state in('1','2')
+        and cross_docking != '1'
+        <if test='queryString!=null and queryString!=""'>
+            and instorage_bill_code like concat(concat('%', #{queryString}), '%')
+        </if>
+    </select>
+    <!--获取操作人下拉框列表-->
+    <select id="getSelectOperatorList" resultType="java.util.Map">
+        select user_id as id,username as text from sys_user
+        where 1=1
+        <if test='queryString!=null and queryString!=""'>
+            and username like concat(concat('%', #{queryString}), '%')
+        </if>
+    </select>
+    <!--获取操作人下拉框列表数据总条数-->
+    <select id="getSelectOperatorTotal" resultType="java.lang.Integer">
+        select count(1) from sys_user
+        where 1=1
+        <if test='queryString!=null and queryString!=""'>
+            and username like concat(concat('%', #{queryString}), '%')
+        </if>
+    </select>
+    <!--查询物料绑定rfid信息-->
+    <select id="selectRfidBindDetail" resultType="java.util.Map">
+        select b.id as materielBindDetailId,b.materiel_code,b.materiel_name,b.batch_rule,b.amount,b.weight
+        from materiel_bind_rfid a
+        inner join materiel_bind_rfid_detail b on a.id=b.materiel_bind_rfid_by
+        where a.rfid=#{rfid}
+        and b.materiel_code=#{materialCode}
+        and b.delete_flag='1'
+        and a.deleted_flag='1'
+    </select>
+    <!--根据上架单id获取上架详情-->
+    <select id="getPutBillDetail" resultType="com.tbl.modules.instorage.entity.PutBillDetail">
+        select distinct material_code,material_name,rfid,unit
+        from put_bill_detail
+        where put_bill_id=#{putBillId}
+    </select>
+    <!--根据id获取入库单导出列-->
+    <select id="getAllLists" resultType="com.tbl.modules.instorage.entity.PutBill">
+        select a.*
+        from put_bill a
+        where 1=1
+        <if test="list!=null and list.size()>0">
+            and a.id in
+            <foreach item="ids" index="index" collection="list"
+                     open="(" separator="," close=")">
+                #{ids}
+            </foreach>
+        </if>
+    </select>
+</mapper>

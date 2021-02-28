@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tbl.modules.stock.dao.InventoryDetailDAO">
+
+    <!--判断物料是否添加过-->
+    <select id="getMaterielCount" resultType="java.lang.Integer">
+        select count(1) from inventory_detail
+        where inventory_id = #{id} and material_code = #{materielCode} and position_code = #{positionCode}
+    </select>
+
+    <!--查询盘点任务详情(无rfid)-->
+    <select id="getInventoryTaskDetail" resultType="com.tbl.modules.stock.entity.InventoryTaskDetail">
+        select * from inventory_task_detail
+        where inventory_task_id=#{inventoryTaskId}
+        and position_code=#{positionCode}
+        and material_code=#{materialCode}
+        and rfid is null
+    </select>
+
+</mapper>

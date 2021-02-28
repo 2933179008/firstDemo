@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tbl.modules.platform.dao.system.UserDAO">
+
+    <!--获取用户列表数据-->
+    <select id="selectUserList" resultType="com.tbl.modules.platform.entity.system.User">
+        select a.*,(select b.role_name from sys_role as b where b.role_id = a.role_id) as rolename
+        from sys_user as a where a.user_id !=1
+
+        /*当前session中的用户不显示*/
+        <if test="suserid != 1">
+            AND a.USER_ID != #{suserid}
+        </if>
+
+        /*用户名*/
+        <if test="username != null and username.trim() != ''">
+            and a.username like concat(concat('%', #{username}), '%')
+        </if>
+
+        /*姓名*/
+        <if test="name != null and name.trim() != ''">
+            and a.name like concat(concat('%', #{name}), '%')
+        </if>
+
+        /*邮箱*/
+        <if test="email != null and email.trim() != ''">
+            and a.email like concat(concat('%', #{email}), '%')
+        </if>
+
+        /*手机号*/
+        <if test="phone != null and phone.trim() != ''">
+            and a.phone like concat(concat('%', #{phone}), '%')
+        </if>
+
+
+    </select>
+
+    <!--判断登录用户属于哪个用户-->
+    <select id="getByUserName" resultType="java.lang.Integer">
+        select count(1) from sys_user where username = #{username}
+    </select>
+
+    <!--登录判断-->
+    <select id="getUserByNameAndPwd" resultType="com.tbl.modules.platform.entity.system.User">
+        select u.*, sr.ADD_QX AS addQx, sr.DEL_QX AS deleteQx,
+            sr.EDIT_QX AS editQx, sr.CHA_QX AS queryQx,product_qx productQX,material_qx materialQX,quality_qx qualityQX from SYS_USER u
+        left join sys_role sr on sr.ROLE_ID = u.ROLE_ID
+        where USERNAME = #{username} and PASSWORD = #{pwd}
+    </select>
+
+    <select id="getUserAndRoleByIds" resultType="com.tbl.modules.platform.entity.system.User">
+        select id userId, suserName username,spassWord password,ROLE_ID ROLE_ID
+        from base_supplierinfo where susername = #{username}
+    </select>
+
+    <select id="getByName" resultType="int">
+        select count(1) from sys_user where USERNAME =#{username} and 1=1
+    </select>
+
+    <!--根据主键查询用户-->
+    <select id="findByUserId" resultType="com.tbl.modules.platform.entity.system.User">
+        select suser.*,srole.ADD_QX addQx,srole.EDIT_QX editQx,
+            srole.DEL_QX deleteQx,srole.CHA_QX queryQx from SYS_USER suser
+        left join sys_role srole on suser.ROLE_ID = srole.ROLE_ID where suser.USER_ID = #{userId}
+    </select>
+
+    <!--根据用户主键修改用户密码-->
+    <update id="updateUserColumn">
+        update SYS_USER set PASSWORD = #{columnValue} where USER_ID = #{userId}
+    </update>
+
+    <!--通过loginname获取数据-->
+    <select id="findByUId" resultType="com.tbl.modules.platform.entity.system.User">
+        select * from SYS_USER where USERNAME = #{username}
+        <if test="userId != null and userId != ''">
+            AND USER_ID != #{userId}
+        </if>
+    </select>
+
+    <!--获取导出列-->
+    <select id="getAllLists" resultType="com.tbl.modules.platform.entity.system.UserModel">
+        select a.*,(select b.ROLE_NAME from SYS_ROLE as b where b.ROLE_ID = a.ROLE_ID) as roleName
+        from SYS_USER as a  where 1=1
+        <if test="list!=null and list.size()>0">
+            and a.USER_ID in
+            <foreach item="ids" index="index" collection="list"
+                     open="(" separator="," close=")">
+                #{ids}
+            </foreach>
+        </if>
+    </select>
+
+    <!--根据用户信息获取用户能访问的菜单权限：这里指定一个设备检测的菜单-->
+    <select id="getUserPageList" resultType="com.tbl.modules.platform.entity.system.User">
+        select u.USER_ID as userId,u.NAME as text from SYS_USER u where 1=1
+    </select>
+
+    <!--获取所有用户列表:供下拉框使用-->
+    <select id="getJcMenuByUserId" resultType="int">
+         select count(1) from sys_rolemenu srm where srm.ROLE_ID = #{userId} AND srm.MENU_ID = 14
+    </select>
+    
+    <!-- 获取用户下拉列表 -->
+    <select id="getUserQuerySelect" resultType="map">
+    	select user_id id,username as text from sys_user where 1=1
+    	
+    	<if test="queryString!=null and queryString!=''">
+	    	and username like concat(concat('%', #{queryString}), '%') 
+    	</if>
+    </select>
+
+    <select id="getInAmount" resultType="int">
+        select count(1) from instorageorder where state !=4
+    </select>
+
+    <select id="getOutAmount" resultType="int">
+        select count(1) from out_storage where status !=4
+    </select>
+
+    <select id="getAbnormalAmount" resultType="int">
+        select count(1) from exceptioncase where status !=2
+    </select>
+
+</mapper>

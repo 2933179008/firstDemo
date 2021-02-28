@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tbl.modules.instorage.dao.PutBillDetailDAO">
+
+    <!--更新上架单上架数量-->
+    <update id="updatePutAmount">
+        update put_bill_detail set put_amount=#{putAmount}
+        where id = #{putBillDetailId}
+    </update>
+    <!--更新上架单的上架重量-->
+    <update id="updatePutWeight">
+        update put_bill_detail set put_weight=#{putWeight}
+        where id = #{putBillDetailId}
+    </update>
+    <!--更新上架单的RFID-->
+    <update id="updateRfid">
+        update put_bill_detail set rfid=#{rfid}
+        where id = #{putBillDetailId}
+    </update>
+    <!--更新上架单的库位编号-->
+    <update id="updatePositionCode">
+        update put_bill_detail set position_code=#{positionCode}
+        where id = #{putBillDetailId}
+    </update>
+    <!--根据入库单id、物料编号和批次号更新入库单的可拆分数量和可拆分重量-->
+    <update id="updateSeparableAmountAndWeight">
+        update instorage_bill_detail
+        set separable_amount=separable_amount-#{putAmount},
+            separable_weight=separable_weight-#{putWeight}
+        where instorage_bill_id=#{instorageBillId}
+        and material_code=#{materialCode}
+        and batch_no=#{batchNo}
+    </update>
+    <!--根据上架单详情id更新上架单详情状态为‘已上架’-->
+    <update id="updatePutBillDetailState">
+        update put_bill_detail set state='1' where id=#{putBillDetailId}
+    </update>
+    <!--更新上架单状态为‘上架中’-->
+    <update id="updateStateToPuting">
+        update put_bill set state='2' where id=#{putBillId}
+    </update>
+    <!--更新上架单状态为‘上架完成’-->
+    <update id="updateStateToComplete">
+        update put_bill set state='3' where id=#{putBillId}
+    </update>
+
+    <!--add by anss 2019-04-29 start-->
+    <!--根据入库单id更新上架单状态为‘上架完成’-->
+    <update id="updateStateSToComplete">
+        update put_bill set state='3' where instorage_bill_id=#{instorageBillId}
+    </update>
+    <!--add by anss 2019-04-29 end-->
+
+    <!--更新入库单状态为‘入库完成’-->
+    <update id="updateInstorageStateToBeing">
+        update instorage_bill set state='2' where id=#{instorageBillId}
+    </update>
+    <!--更新入库单状态为‘入库完成’-->
+    <update id="updateInstorageStateToComplete">
+        update instorage_bill set state='3' where id=#{instorageBillId}
+    </update>
+    <!--更新库存表的可用库存数量、可用库存重量、可用托盘库存数量、可用的RFID（多个rfid用逗号隔开）-->
+    <update id="updateStockAvailableField">
+        update stock
+            set available_stock_amount=available_stock_amount+#{putAmount},
+                available_stock_weight=available_stock_weight+#{putWeight},
+                available_stock_rfid_amount=available_stock_rfid_amount+1,
+                available_rfid=if(available_rfid is null,#{rfid},CONCAT(available_rfid,',',#{rfid}))
+            where material_code=#{materialCode}
+            and batch_no=#{batchNo}
+            and position_code=#{positionCode}
+            and material_type='1'
+    </update>
+    <!--根据物料编码和rfid更新物料绑定详情表的批次号和库位id-->
+    <update id="updateBindRfidDetail">
+        update materiel_bind_rfid_detail
+        set batch_rule=#{batchNo},position_id=#{positionId},status=#{status},product_data=#{productDate}
+        where materiel_code=#{materialCode} and rfid=#{rfid} and delete_flag = '1'
+    </update>
+    <!--更新物料绑定表状态为入库状态-->
+    <update id="updateBindRfid">
+        update materiel_bind_rfid
+        set status='1',position_by=#{positionId}
+        where rfid=#{rfid}
+        and deleted_flag='1'
+    </update>
+    <!--获取物料下拉列表-->
+    <select id="getSelectMaterialList" resultType="java.util.Map">
+        select material_code as id,material_name as text
+        from instorage_bill_detail
+        where 1=1
+        and instorage_bill_id=#{instorageBillId} and (separable_amount !=0 and separable_weight != 0)
+        <if test='queryString!=null and queryString!=""'>
+            and material_name like concat(concat('%', #{queryString}), '%')
+        </if>
+    </select>
+    <!--获取物料下拉列表总条数-->
+    <select id="getSelectMaterialTotal" resultType="java.lang.Integer">
+        select count(1)
+        from instorage_bill_detail
+        where 1=1
+        and instorage_bill_id=#{instorageBillId}
+        <if test='queryString!=null and queryString!=""'>
+            and material_name like concat(concat('%', #{queryString}), '%')
+        </if>
+    </select>
+    <!--根据上架单主键和物料编码获取物料数量-->
+    <select id="getMaterialCount" resultType="java.lang.Integer">
+        select count(1) from put_bill_detail
+        where put_bill_id = #{putBillId} and material_code in
+        <foreach collection="materialCodes" item="materialCode" index="index" open="(" separator="," close=")">
+            #{materialCode}
+        </foreach>
+    </select>
+
+    <!--查询已放有其他物料的可混放类型库位信息-->
+    <select id="selectBlendPosition" resultType="java.util.Map">
+        select a.material_code,a.position_code,a.stock_rfid_amount,a.stock_weight,b.capacity_rfid_amount,b.capacity_weight
+        from stock a
+        left join base_depot_position b on a.position_code=b.position_code
+        left join base_depot_area c on b.depotarea_id=c.id
+        where 1=1
+        and c.area_type='0'
+        and b.classify=#{upshelfClassify}
+        and b.blend_type='0'
+        and b.position_type = '1'
+        and a.material_code != #{materialCode}
+    </select>
+
+    <!--查询没放过物料的全新库位-->
+    <select id="selectNewPosition" resultType="java.util.Map">
+        select position_code
+        from base_depot_position
+        where position_code not in
+        <foreach collection="positionCode" item="lstPositionCode" index="index" open="(" separator="," close=")">
+            #{positionCode}
+        </foreach>
+    </select>
+
+    <!--获取上架单详情列表-->
+    <select id="getPagePutBillDetailList" resultType="com.tbl.modules.instorage.entity.PutBillDetail">
+        select * from put_bill_detail where put_bill_id=#{putBIllId}
+    </select>
+    <!--校验一个rfid不能放在多个库位上-->
+    <select id="selectRfidInPosition" resultType="java.util.Map">
+        select rfid from put_bill_detail
+        where put_bill_id=#{putBillId}
+        and rfid = #{rfid}
+        group by rfid
+        having count(DISTINCT position_code)=1
+    </select>
+    <!--根据上架单id查询上架详情中物料的种类-->
+    <select id="getInstorageMaterialCode" resultType="java.lang.String">
+        select material_code
+        from instorage_bill_detail
+        where instorage_bill_id=#{instorageBillId}
+    </select>
+    <!--根据rfid查询rfid绑定的物料种类-->
+    <select id="getRfidMaterialCode" resultType="java.lang.String">
+        select materiel_code
+        from materiel_bind_rfid_detail a
+        inner join materiel_bind_rfid b on a.materiel_bind_rfid_by = b.id
+        where b.rfid=#{rfid}
+        and b.deleted_flag='1'
+        and a.delete_flag='1'
+    </select>
+
+
+</mapper>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tbl.modules.instorage.dao.InstorageDetailDAO">
+    <!--插入上架单详情数据-->
+    <insert id="insertPutBillDetail">
+        <foreach collection="lstInstorageDetail" item="instorageDetail" index="index" open="" separator=";" close="">
+            <if test="instorageDetail.separableAmount !=0 and instorageDetail.separableWeight !=0">
+                insert into put_bill_detail(put_bill_id,material_code,material_name,batch_no,product_date,unit)
+                values(#{putBillId},#{instorageDetail.materialCode},#{instorageDetail.materialName},#{instorageDetail.batchNo},#{instorageDetail.productDate},#{instorageDetail.unit})
+            </if>
+        </foreach>
+    </insert>
+
+    <!--更新入库单详情的批次号-->
+    <update id="updateBatchNo">
+        update instorage_bill_detail set batch_no=#{batchNo}
+        where id = #{instorageDetailId}
+    </update>
+    <!--更新入库单详情的生产日期-->
+    <update id="updateProductDate">
+        update instorage_bill_detail set product_date=#{productDate}
+        where id = #{instorageDetailId}
+    </update>
+    <!--更新入库单详情的入库数量-->
+    <update id="updateInstorageAmount">
+        update instorage_bill_detail set instorage_amount=#{instorageAmount}
+        where id = #{instorageDetailId}
+    </update>
+    <!--更新入库单详情的入库重量-->
+    <update id="updateInstorageWeight">
+        update instorage_bill_detail set instorage_weight=#{instorageWeight}
+        where id = #{instorageDetailId}
+    </update>
+
+    <!--获取物料下拉列表-->
+    <select id="getSelectMaterialList" resultType="java.util.Map">
+        <if test='outstorageBillId!=null and outstorageBillId!=""'>
+            select concat(material_code,'|',batch_no) as id,concat(material_name,'(',batch_no,')') as text
+            from outstorage_bill_detail
+            where 1=1
+            and outstorage_bill_id=#{outstorageBillId}
+            <if test='queryString!=null and queryString!=""'>
+                and material_name like concat(concat('%', #{queryString}), '%')
+            </if>
+        </if>
+        <if test='outstorageBillId==null or outstorageBillId==""'>
+            select materiel_code as id,materiel_name as text
+            from base_materiel
+            where 1=1
+            <if test='queryString!=null and queryString!=""'>
+                and materiel_name like concat(concat('%', #{queryString}), '%')
+            </if>
+        </if>
+
+    </select>
+
+    <!--获取物料下拉列表数据总条数-->
+    <select id="getSelectMaterialTotal" resultType="java.lang.Integer">
+        <if test='outstorageBillId!=null and outstorageBillId!=""'>
+            select count(1)
+            from outstorage_bill_detail
+            where 1=1
+            and outstorage_bill_id=#{outstorageBillId}
+            <if test='queryString!=null and queryString!=""'>
+                and material_name like concat(concat('%', #{queryString}), '%')
+            </if>
+        </if>
+        <if test='outstorageBillId==null or outstorageBillId==""'>
+            select count(1)
+            from base_materiel
+            where 1=1
+            <if test='queryString!=null and queryString!=""'>
+                and materiel_name like concat(concat('%', #{queryString}), '%')
+            </if>
+        </if>
+    </select>
+
+    <!--根据入库单主键和物料编码获取物料数量-->
+    <select id="getMaterialCount" resultType="java.lang.Integer">
+        select count(1) from instorage_bill_detail
+        where instorage_bill_id = #{instorageId} and material_code in
+        <foreach collection="materialCodes" item="materialCode" index="index" open="(" separator="," close=")">
+            #{materialCode}
+        </foreach>
+    </select>
+    <!--查询入库单详情物料种类-->
+    <select id="selectMaterialType" resultType="java.util.Map">
+        select material_code from instorage_bill_detail
+        where instorage_bill_id=#{instorageId}
+        group by material_code
+    </select>
+    <!--获取出库单详情-->
+    <select id="getOutstorageBillDetail" resultType="java.util.Map">
+        select a.material_name,a.unit,a.separable_amount,a.separable_weight
+        from outstorage_bill_detail a
+        inner join outstorage_bill b on a.outstorage_bill_id=b.id
+        where b.id=#{outstorageBillId}
+        and material_code=#{materialCode}
+        and batch_no=#{batchNo}
+        limit 1
+    </select>
+</mapper>

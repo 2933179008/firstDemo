@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tbl.modules.platform.dao.system.UserMenuDAO">
+
+    <!--获取用户菜单-->
+    <select id="getUserMenu" resultType="map">
+        select * from sys_usermenu where user_id = #{user_id} and type = #{type}
+    </select>
+
+    <!--获取用户菜单11-->
+    <select id="getUserMenu11" resultType="map">
+        select * from sys_usermenu where user_id = #{user_id} and type = #{type} and isQuick = 1
+    </select>
+
+    <!--删除-->
+    <delete id="deleteUserMenu">
+        DELETE FROM sys_usermenu  where user_id = #{user_id}
+
+        <if test="type != null and type != ''">
+            and type = #{type}
+        </if>
+
+        <if test="isQuick != null and isQuick != ''">
+            and isQuick = #{isQuick}
+        </if>
+    </delete>
+
+    <!--保存-->
+    <insert id="insertUserMenus">
+        insert into sys_usermenu VALUES (#{userId}, #{menuId}, #{order}, #{type}, #{isQuick})
+    </insert>
+
+    <insert id="insertMenu">
+        insert into sys_usermenu("user_id","menu_id","order","type") VALUES (#{userId}, #{menuId}, #{order}, #{type})
+    </insert>
+
+</mapper>

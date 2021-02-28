@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tbl.modules.outstorage.dao.OutStorageDetailDAO">
+
+    <!--获取物料的下拉框 -->
+    <select id="getSelectMaterialList" resultType="java.util.Map">
+        select CONCAT(material_code,'_',batch_no,'_',product_date,'_',position_code)
+        id,concat(material_name,'(',batch_no,')','_',product_date,'_',position_name) as text from stock where
+        stock_amount>0
+        <if test='queryString!=null and queryString!=""'>
+            and material_name like concat(concat('%', #{queryString}), '%')
+        </if>
+        <if test="positionCode!=null and positionCode!=''">
+            and position_code =#{positionCode}
+        </if>
+        <if test="customerCode!=null and customerCode!=''">
+            and customer_code=#{customerCode}
+        </if>
+        <if test="billType!=null and billType!=''">
+            and material_type=#{billType}
+        </if>
+        <if test="materialCodes != null and materialCodes.size >0">
+            and material_code in
+            <foreach collection="materialCodes" item="materialCode" index="index" open="(" separator="," close=")">
+                #{materialCode}
+            </foreach>
+        </if>
+        -- group by material_code,batch_no
+    </select>
+
+    <!--获取物料下拉列表总条数-->
+    <select id="getSelectMaterialTotal" resultType="java.lang.Integer">
+        select count(1) from stock where 1=1
+        <if test='queryString!=null and queryString!=""'>
+            and material_name like concat(concat('%', #{queryString}), '%')
+        </if>
+    </select>
+
+    <!-- 判断物料是否已经存在-->
+    <select id="getMaterialCount" resultType="java.lang.Integer">
+        select count(1) from outstorage_bill_detail
+          where outstorage_bill_id = #{outStorageId} and material_code = #{materialCode} and batch_no = #{batchNo} and position_code = #{positionCode}
+    </select>
+
+    <!-- 进行物料的添加-->
+    <select id="addOutStorageDetail" resultType="java.lang.Boolean">
+        insert into outstorage_bill_detail(material_code,material_name,unit,batch_no,outstorage_bill_id) values(#{materialCode},#{materialName},'','',#{outStorageId})
+    </select>
+
+    <!-- 根据出库单获取详情的状态-->
+    <select id="getDetailList" resultType="com.tbl.modules.outstorage.entity.OutStorageDetailManagerVO">
+        select id,material_code,material_name,unit,batch_no,amount,weight,position_code,outstorage_bill_id,product_data from outstorage_bill_detail where outstorage_bill_id = #{outStorageId}
+    </select>
+
+    <!-- 出库单状态提交-->
+    <select id="updateState" resultType="java.lang.Object">
+        update outstorage_bill set state = 1 where id = #{outStorageId}
+    </select>
+
+    <!-- 更新详情数量-->
+    <select id="updateDetailAmount" resultType="java.lang.Integer">
+        update outstorage_bill_detail set amount = #{amount} where id = #{id}
+    </select>
+
+    <!-- 更新更新批次号-->
+    <select id="updateDetailBatchNo" resultType="java.lang.Integer">
+        update outstorage_bill_detail set batch_no = #{batchNo} where id = #{id}
+    </select>
+
+    <!-- 将获取最大编号-->
+    <select id="getMaxXJstorageCode" resultType="java.lang.String">
+        select max(lower_shelf_bill_code) from lower_shelf_bill
+    </select>
+
+    <!-- 获取库存中已经占用的数量进行下架处理-->
+    <select id="getoccupystock" resultType="java.util.Map">
+        select position_code,materiel_code material_code,materiel_name material_name,batch_rule batch_no,occupy_stock_amount,occupy_stock_weight,rfid,amount,transform,product_data
+          from materiel_bind_rfid_detail mbrd
+          left join base_depot_position bdp on bdp.id = mbrd.position_id
+        where outstorage_bill_code = #{outStorageBillCode}
+    </select>
+
+    <!-- 通过物料编号以及批次号查询对应的库存中的数量查询-->
+    <select id="getstockAmount" resultType="java.lang.Object">
+        select sum(available_stock_amount) from stock where  material_code = #{materialNo} and batch_no=#{batchNo} and material_type=#{materialType}
+         and (outstorage_bill_code is null or outstorage_bill_code= '')
+    </select>
+
+    <!-- 通过物料编号以及批次号进行对应的物料的查询-->
+    <select id="getMaterialList" resultType="java.util.Map">
+        select id,materiel_code,amount,batch_rule,rfid,weight from materiel_bind_rfid_detail
+        where batch_rule=#{batchNo} and materiel_code = #{materialNo} and delete_flag = 1
+        and rfid in
+        <foreach collection="rfids" item="rfid" index="index" open="(" separator="," close=")">
+            #{rfid}
+        </foreach>
+        and STATUS = 1 and (outstorage_bill_code is null or outstorage_bill_code= '') order by amount asc
+    </select>
+
+    <!-- 通过物料编号以及批次号进行对应的物料的查询-->
+    <select id="getAmount" resultType="java.lang.Integer">
+        select sum(amount) from materiel_bind_rfid_detail
+        where materiel_code = #{materialNo} and batch_rule=#{batchNo} and delete_flag = 1
+        and rfid in
+        <foreach collection="rfids" item="rfid" index="index" open="(" separator="," close=")">
+            #{rfid}
+        </foreach>
+        and STATUS = 1 and (outstorage_bill_code is null or outstorage_bill_code= '') order by amount asc
+    </select>
+
+    <!-- 通过物料编号以及批次号进行对应的物料的查询-->
+    <select id="getWeight" resultType="java.lang.Double">
+        select sum(weight) from materiel_bind_rfid_detail
+        where materiel_code = #{materialNo} and batch_rule=#{batchNo} and delete_flag = 1
+        and rfid in
+        <foreach collection="rfids" item="rfid" index="index" open="(" separator="," close=")">
+            #{rfid}
+        </foreach>
+        and STATUS = 1 and (outstorage_bill_code is null or outstorage_bill_code= '') order by amount asc
+    </select>
+
+    <!-- 通过物料编号以及批次号获取对应的货权转移的来源-->
+    <select id="getDataSource" resultType="java.util.Map">
+        select material_code,batch_no, available_rfid from stock where id =
+        (select material_source from stock where material_code = #{materialCode} and batch_no = #{batchNo} and material_type=#{materialType}
+          and (material_source is not null or material_source!= '')
+        )
+    </select>
+
+
+    <!-- 通过绑定表中的ID以及数量进行出库的锁库-->
+    <select id="occupiedInventory" resultType="java.lang.Integer">
+        update materiel_bind_rfid_detail set occupy_stock_amount = #{amount},occupy_stock_weight = #{weight},outstorage_bill_code=#{outStorageBillCode},transform=#{type} where id = #{mfId}
+    </select>
+
+    <!-- 通过rfid锁定库存中的数量-->
+    <select id="occupiedStock" resultType="java.lang.Integer">
+        update stock set occupy_stock_amount = occupy_stock_amount+#{amount},occupy_stock_weight = occupy_stock_weight+#{weight},
+        outstorage_bill_code = IFNULL(CONCAT(outstorage_bill_code,',',#{outStorageBillCode}),#{outStorageBillCode})
+        where rfid like concat(concat('%', #{rfid}), '%') and batch_no = #{batchNo} and material_code = #{materialCode}
+    </select>
+
+    <!-- 查询库存中的可用的RFID-->
+    <select id="getRfidList" resultType="java.lang.String">
+        select available_rfid rfid from stock where batch_no = #{batchNo} and material_code=#{materialNo}
+         and (outstorage_bill_code is null or outstorage_bill_code='')
+    </select>
+
+    <!-- 跟新出库单详情中的总的数量-->
+    <select id="updateDetail" resultType="java.lang.Boolean">
+        update outstorage_bill_detail set amount = #{amount},weight = #{weight},separable_amount=#{amount},separable_weight=#{weight} where id = #{outDetailId}
+    </select>
+
+    <!-- 获取下架单详情中的总的出库数量-->
+    <select id="getmaterialAmount" resultType="java.lang.Object">
+        select sum(amount) from lower_shelf_bill_detail where lower_shelf_bill_id =#{lowerId} and material_code = #{materialCode} and batch_no=#{batchNo}
+    </select>
+
+    <!-- 获取下架单详情中的总的出库数量-->
+    <select id="getmaterialWeight" resultType="java.lang.Object">
+        select sum(weight) from lower_shelf_bill_detail where lower_shelf_bill_id =#{lowerId} and material_code = #{materialCode} and batch_no=#{batchNo}
+    </select>
+
+
+    <!-- 获取下架单详情中的总的出库数量-->
+    <select id="getUnit" resultType="java.lang.Object">
+        select unit from base_materiel where materiel_code = #{materialName}
+    </select>
+
+    <delete id="deleteByOutStorageId">
+        delete from outstorage_bill_detail where outstorage_bill_id = #{outStorageId}
+    </delete>
+</mapper>

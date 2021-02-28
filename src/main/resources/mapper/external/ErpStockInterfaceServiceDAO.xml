@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tbl.modules.external.dao.ErpStockInterfaceServiceDAO">
+
+    <!--查询满足调用接口条件的盘点任务,只取一条-->
+    <select id="selectInventoryTask" resultType="java.util.Map">
+        select * from inventory_task  where  state='4'
+    </select>
+
+    <!--根据盘点任务单id查询盘点任务单详情  盘盈-->
+    <select id="selecInventoryTaskDetail" resultType="java.util.Map">
+        select *
+        from inventory_task_detail
+        where inventory_task_id=#{inventoryTaskId} AND erp_flag='0' AND inventory_amount+0 > stock_amount+0 OR stock_amount=null
+    </select>
+
+    <!--根据盘点任务单id查询盘点任务单详情  盘亏-->
+    <select id="selecInventoryTaskDet" resultType="java.util.Map">
+        select *
+        from inventory_task_detail
+        where inventory_task_id=#{inventoryTaskId} AND erp_flag='0' AND stock_amount+0 > inventory_amount+0 OR inventory_amount=null
+    </select>
+
+    <!--查询货权转移的库存信息 -->
+    <select id="selectStock" resultType="java.util.Map">
+        select *
+        from stock
+        where materiel_power="1" and erp_flag='0'
+    </select>
+
+    <!--查询货权转移的库存信息  转移后的信息-->
+    <select id="selectGenerateStock" resultType="java.util.Map">
+        select *
+        from stock
+        where material_source is not null and material_source !=''
+    </select>
+
+    <!--更新盘点表erp_flag字段-->
+    <update id="updateInventoryTaskErpFlag">
+        <foreach collection="list" item="inventoryTask" index="index" separator=";" open="" close="">
+            update inventory_task_detail set erp_flag='1'
+            where id=#{inventoryTask.id}
+        </foreach>
+    </update>
+
+    <!--更新库存表erp_flag字段-->
+    <update id="updateStockErpFlag">
+        <foreach collection="list" item="stock" index="index" separator=";" open="" close="">
+            update stock set  material_source=""
+            where id=#{stock.id}
+        </foreach>
+    </update>
+
+    <!--更新库存表erp_flag字段-->
+    <update id="updateMaterielErpFlag">
+        <foreach collection="list" item="stock" index="index" separator=";" open="" close="">
+            update stock set materiel_power=''
+            where id=#{stock.id}
+        </foreach>
+    </update>
+
+    <!--查询移位完成信息 散货-->
+    <select id="selectMovePosition" resultType="java.util.Map">
+        select *
+        from move_position
+        where status="2" and move_position_type="0" and erp_flag='0'
+    </select>
+
+    <!--查询移位完成信息 整货-->
+    <select id="selectRfidMovePosition" resultType="java.util.Map">
+        select *
+        from move_position
+        where status="2" and move_position_type="1" and erp_flag='0'
+    </select>
+
+    <!--更新移位表erp_flag字段-->
+    <update id="updateMovePositionErpFlag">
+        <foreach collection="list" item="movePosition" index="index" separator=";" open="" close="">
+            update move_position set erp_flag='1'
+            where id=#{movePosition.id}
+        </foreach>
+    </update>
+</mapper>

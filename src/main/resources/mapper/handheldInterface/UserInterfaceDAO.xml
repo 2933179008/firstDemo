@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tbl.modules.handheldInterface.dao.UserInterfaceDAO">
+
+    <!--登录判断-->
+    <select id="getUserByNameAndPwd" resultType="com.tbl.modules.platform.entity.system.User">
+        select u.*, sr.ADD_QX AS addQx, sr.DEL_QX AS deleteQx,
+            sr.EDIT_QX AS editQx, sr.CHA_QX AS queryQx from SYS_USER u
+        left join sys_role sr on sr.ROLE_ID = u.ROLE_ID
+        where USERNAME = #{username} and PASSWORD = #{pwd}
+    </select>
+
+</mapper>

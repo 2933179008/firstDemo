@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tbl.modules.outstorage.dao.OutStorageDAO">
+    <!--获取列表的值 -->
+    <select id="selectOutStorageList" resultType="com.tbl.modules.outstorage.entity.OutStorageManagerVO">
+        select ob.id id,outstorage_bill_code outstorageBillCode,outstorage_bill_type outstorageBillType,ob.spare_bill_code spareBillCode,customer_name customerCode,position_code positionCode,outstorage_plan_time outstoragePlanTime,ob.remark remark,ob.state state,bill_type billType
+         from outstorage_bill ob
+          left join spare_bill sb on sb.spare_bill_code = ob.spare_bill_code
+          left join base_customer bc on bc.customer_code = ob.customer_code
+        where 1 = 1
+
+        <if test=" outstorage_bill_code!= null and outstorage_bill_code.trim() != ''">
+            AND outstorage_bill_code like concat(concat('%', #{outstorage_bill_code}), '%')
+        </if>
+
+        <if test=" outstorage_bill_type!= null and outstorage_bill_type.trim() != ''">
+            AND outstorage_bill_type = #{outstorage_bill_type}
+        </if>
+    </select>
+
+    <!--获取当前数据库中的出库单的最大编号 -->
+    <select id="getMaxOutstorageCode" resultType="java.lang.String">
+        select max(outstorage_bill_code) from outstorage_bill
+    </select>
+
+    <!--货主下拉框展示 -->
+    <select id="getCustomerList" resultType="java.util.Map">
+        select customer_code,customer_name  from base_customer where deleted_flag = 1
+    </select>
+
+
+    <!--货主下拉框展示 -->
+    <select id="getAreaList" resultType="java.util.Map">
+        select position_code,position_name  from base_depot_position
+    </select>
+
+    <!--获取备料单的下拉框 -->
+    <select id="getSpareList" resultType="java.util.Map">
+        select spare_bill_code from spare_bill where state = 3
+    </select>
+
+    <!--获取收货单的下拉框 -->
+    <select id="getReceipList" resultType="java.util.Map">
+        select id,receipt_code from receipt_plan where state = 3 or state = 4
+    </select>
+    <!--获取入库单的下拉框 -->
+    <select id="getInstorageList" resultType="java.util.Map">
+         select id,instorage_bill_code from instorage_bill where (instorage_type=0 or instorage_type = 1) and cross_docking =1 and state = 3
+    </select>
+
+    <!--判断出库单是否已经生成了下架单 -->
+    <select id="isExist" resultType="java.lang.Integer">
+        select count(1) from lower_shelf_bill where outstorage_bill_id in (#{outstorage_bill_type})
+    </select>
+
+    <!--更新状态 -->
+    <select id="auditing"  parameterType="java.lang.String" resultType="java.lang.Boolean">
+        update lower_shelf_bill set state = #{state} where id = #{id}
+    </select>
+
+    <!--通过设备的IP获取对应的产线的信息 -->
+    <select id="getLineIP"  resultType="java.lang.Object">
+        select lineCode from line_bind_device where deviceIp = #{deviceIp}
+    </select>
+
+    <!--通过 rfid获取对应的出库单的ID-->
+    <select id="outStorageId"  resultType="java.lang.Object">
+        select outstorage_bill_id from lower_shelf_bill where id = (select lower_shelf_bill_id from lower_shelf_bill_detail where rfid = #{rfid} and state in(0,1))
+    </select>
+
+    <select id="getLowerId"  resultType="java.lang.Object">
+        select lower_shelf_bill_id from lower_shelf_bill_detail where rfid = #{rfid} and state in(0,1)
+    </select>
+
+
+    <!--通过出库单的Id获取对应的备料单中的产线的信息-->
+    <select id="getRfidIp"  resultType="java.util.Map">
+        select mix_use_line,id from spare_bill where spare_bill_code = (select spare_bill_code from outstorage_bill where id = #{outStorageId})
+    </select>
+
+
+    <!--通过出库单的Id获取对应的备料单中的产线的信息-->
+    <select id="deleteMap"  resultType="java.lang.Object">
+        delete from outstorage_bill_detail where outstorage_bill_id = #{outstorageId}
+    </select>
+    <select id="outStorageStatusCount" resultType="java.lang.Integer">
+        select COUNT(1) from outstorage_bill where state != 5 and spare_bill_code = #{spareBillCode}
+    </select>
+
+
+</mapper>
