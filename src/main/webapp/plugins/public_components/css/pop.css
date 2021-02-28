@@ -1,0 +1,136 @@
+.pop{
+	width: 360px;
+	height: 100%;
+	right: 0px;
+	position: absolute;
+	border-left: 1px solid #ccc;
+	box-sizing: border-box;
+	/* display:none; */
+	background: #fff;
+	z-index: 9999;
+}
+.pop .remove_pop_btn{
+	float: right;
+}
+.pop .label{
+
+    background: #343c47;
+    padding: 10px 7px;
+    display: block;
+    color: #fff;
+}
+.pop .group_title{
+    background: #fafafa;
+    border-bottom: 1px solid #ccc;
+    padding: 10px;
+    color: #000;
+    display: flex;
+}
+.pop #export_grid-div{
+    background: #f6f6f6;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.pop #export_grid-div{
+    background: #f6f6f6;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.pop .expand{
+	background: url(img/plus.png);
+    display: block;
+    width: 12px;
+    height: 12px;
+    position: absolute;
+    background-size: 13px;
+    margin: 4px;
+    right: 20px;
+}
+.pop .minus{
+   background: url(img/j.png);
+   background-size: 13px;
+}
+.pop .action{
+	position: absolute; 
+	right: 40px;
+	
+}
+.pop .action i {
+	margin-right: 5px;
+}
+.pop .tab_group{
+	margin: 0px 10px 10px 10px ;
+    display: block;
+    font-size: 12px;
+    height: 20px;
+    border-bottom: 1px solid #ccc;
+}
+.pop .tab_group li{
+    line-height: 20px;
+    text-align: center;
+    float: left;
+    display: inline;
+    margin-right: 18px;
+    height: 20px;
+    cursor: pointer;
+}
+.pop .group_show{
+	display:block;
+}
+.pop .group_show{
+	display:block;
+}
+.pop .group_hide{
+	display:none;
+}
+.pop .tab_group li.active_li{
+	color: #00a0df;
+	border-bottom: 2px solid #00a0df;
+}
+.pop .active_li_show{
+	display:block;
+}
+.pop .active_li_hide{
+	display:none;
+}
+.pop .form-box{
+     margin: 5px;
+/*     background: #f6f6f6; */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 5px;
+}
+.export_group ul{
+    list-style-type: none;
+    margin: 10px 0px;
+}
+.export_group ul{
+    list-style-type: none;
+    margin: 10px 0px;
+}
+
+.export_group label{
+    font-size: 11px;
+    color: #000;
+}
+.export_group input{
+    width: 250px;
+    margin: 0px;
+    padding: 1px;
+    font-size: 13px;
+}
+.export_group .btn{
+    font-size: 11px;
+    border-radius: 3px;
+}
+.export_group .field-button{
+    float: right;
+}
+.export_group td input{
+    width: 145px;
+    border: 1px solid #ccc;
+    font-size: 11px;
+}
+.pop input[type="radio"]{
+	    margin: 0px;	
+}
