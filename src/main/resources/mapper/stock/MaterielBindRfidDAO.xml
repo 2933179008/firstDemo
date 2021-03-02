@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
-<mapper namespace="com.tbl.modules.stock.dao.MaterielBindRfidDAO">
-
-    <select id="materielBindRfid" resultType="com.tbl.modules.stock.entity.MaterielBindRfid">
-        select id,bind_code,rfid,position_by,status from materiel_bind_rfid where deleted_flag=1 and rfid=#{rfid}
-    </select>
-</mapper>

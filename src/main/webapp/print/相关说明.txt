@@ -1,5 +1,0 @@
-1 jna.jar为调用打印机需要的jar包，
-
-2 调用打印机设备还需要将TSCLIB.dll放入到C:\Windows\SysWOW64（或者C:\Windows\System32）路径下，根据实际情况放置位置会有所不同
-（或者直接放到jdk的bin目录下面）
-3 TscLibDllService.java为打印的service
